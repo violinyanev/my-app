@@ -3,6 +3,7 @@ package com.example.myapplication.di
 import android.app.Application
 import androidx.room.Room
 import com.example.myapplication.recipes.data.datasource.RecipeDatabase
+import com.example.myapplication.recipes.data.util.DatabaseInitializer
 import com.example.myapplication.recipes.domain.repository.RecipeRepository
 import com.example.myapplication.recipes.domain.repository.RecipeRepositoryImpl
 import com.example.myapplication.recipes.domain.usecase.AddRecipe
@@ -14,6 +15,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.runBlocking
 import javax.inject.Singleton
 
 @Module
@@ -22,11 +24,20 @@ class AppModule {
     @Provides
     @Singleton
     fun provideRecipeDatabase(app: Application): RecipeDatabase {
-        return Room.databaseBuilder(
+
+        val database = Room.databaseBuilder(
             app,
             RecipeDatabase::class.java,
             RecipeDatabase.DATABASE_NAME
-        ).build()
+        )
+        .build()
+
+        if (BuildConfig.DEBUG) {
+        runBlocking {
+            DatabaseInitializer.populateDatabase(database)
+        }
+
+        return database
     }
 
     @Provides
